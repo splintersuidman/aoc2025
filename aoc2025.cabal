@@ -79,6 +79,7 @@ common dependencies
                     , unordered-containers
                     , vec
                     , vector
+                    , modular-arithmetic
 
     -- Base language which the package is written in.
     default-language: GHC2021

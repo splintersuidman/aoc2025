@@ -53,3 +53,9 @@ parseSepBy :: (Monad m) => (a -> Bool) -> Parser a m b -> Stream m a -> Stream m
 parseSepBy pred p = Stream.parseMany $ p <* sep
  where
   sep = Parser.takeWhile1 pred Fold.drain <|> Parser.fromPure ()
+
+char :: (Eq a, Monad m) => a -> Parser a m a
+char c = Parser.satisfy (== c)
+
+debug :: (Monad m) => (a -> m b) -> Stream m a -> Stream m a
+debug f = Stream.tap (Fold.drainMapM f)
