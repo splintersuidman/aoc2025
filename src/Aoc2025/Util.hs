@@ -17,17 +17,21 @@ import Streamly.Data.Stream (Stream)
 import Streamly.Data.Stream qualified as Stream
 import Streamly.Internal.Data.Parser qualified as Parser
 
-showText :: Show a => a -> Text
+showText :: (Show a) => a -> Text
 showText = Text.pack . show
 {-# INLINE showText #-}
 
-showByteStringUtf8 :: Show a => a -> ByteString
+showByteStringUtf8 :: (Show a) => a -> ByteString
 showByteStringUtf8 = Text.encodeUtf8 . showText
 {-# INLINE showByteStringUtf8 #-}
 
 castEnum :: (Enum a, Enum b) => a -> b
 castEnum = toEnum . fromEnum
 {-# INLINE castEnum #-}
+
+castIntegral :: (Integral a, Num b) => a -> b
+castIntegral = fromInteger . toInteger
+{-# INLINE castIntegral #-}
 
 -- | Parser for decimal natural numbers.
 naturalParser :: (Monad m) => Parser Word8 m Natural
@@ -45,14 +49,14 @@ nonNegIntegerParser = toInteger <$> naturalParser
 
 -- | Parser for decimal integers.
 integerParser :: (Monad m) => Parser Word8 m Integer
-integerParser
-  =  negate <$> (Parser.satisfy (== castEnum '-') *> nonNegIntegerParser)
- <|> nonNegIntegerParser
+integerParser =
+  negate <$> (Parser.satisfy (== castEnum '-') *> nonNegIntegerParser)
+    <|> nonNegIntegerParser
 
 parseSepBy :: (Monad m) => (a -> Bool) -> Parser a m b -> Stream m a -> Stream m (Either Parser.ParseError b)
 parseSepBy pred p = Stream.parseMany $ p <* sep
- where
-  sep = Parser.takeWhile1 pred Fold.drain <|> Parser.fromPure ()
+  where
+    sep = Parser.takeWhile1 pred Fold.drain <|> Parser.fromPure ()
 
 char :: (Eq a, Monad m) => a -> Parser a m a
 char c = Parser.satisfy (== c)
